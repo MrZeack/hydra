@@ -21,6 +21,7 @@
 package client_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -34,14 +35,19 @@ import (
 	"github.com/ory/hydra/driver/config"
 	"github.com/ory/hydra/internal"
 	"github.com/ory/hydra/x"
+	"github.com/ory/x/contextx"
 )
 
 func TestValidate(t *testing.T) {
+	ctx := context.Background()
 	c := internal.NewConfigurationWithDefaults()
-	c.MustSet(config.KeySubjectTypesSupported, []string{"pairwise", "public"})
-	c.MustSet(config.KeyDefaultClientScope, []string{"openid"})
+	c.MustSet(ctx, config.KeySubjectTypesSupported, []string{"pairwise", "public"})
+	c.MustSet(ctx, config.KeyDefaultClientScope, []string{"openid"})
+	reg := internal.NewRegistryMemory(t, c, &contextx.Static{C: c.Source(ctx)})
+	v := NewValidator(reg)
 
-	v := NewValidator(c)
+	testCtx := context.TODO()
+
 	for k, tc := range []struct {
 		in        *Client
 		check     func(t *testing.T, c *Client)
@@ -110,8 +116,8 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			v: func(t *testing.T) *Validator {
-				c.MustSet(config.KeySubjectTypesSupported, []string{"pairwise"})
-				return NewValidator(c)
+				c.MustSet(ctx, config.KeySubjectTypesSupported, []string{"pairwise"})
+				return NewValidator(reg)
 			},
 			in: &Client{OutfacingID: "foo"},
 			check: func(t *testing.T, c *Client) {
@@ -135,7 +141,7 @@ func TestValidate(t *testing.T) {
 					return v
 				}
 			}
-			err := tc.v(t).Validate(tc.in)
+			err := tc.v(t).Validate(testCtx, tc.in)
 			if tc.expectErr {
 				require.Error(t, err)
 			} else {
@@ -201,11 +207,14 @@ func TestValidateSectorIdentifierURL(t *testing.T) {
 }
 
 func TestValidateDynamicRegistration(t *testing.T) {
+	ctx := context.Background()
 	c := internal.NewConfigurationWithDefaults()
-	c.MustSet(config.KeySubjectTypesSupported, []string{"pairwise", "public"})
-	c.MustSet(config.KeyDefaultClientScope, []string{"openid"})
+	c.MustSet(ctx, config.KeySubjectTypesSupported, []string{"pairwise", "public"})
+	c.MustSet(ctx, config.KeyDefaultClientScope, []string{"openid"})
+	reg := internal.NewRegistryMemory(t, c, &contextx.Static{C: c.Source(ctx)})
 
-	v := NewValidator(c)
+	testCtx := context.TODO()
+	v := NewValidator(reg)
 	for k, tc := range []struct {
 		in        *Client
 		check     func(t *testing.T, c *Client)
@@ -256,7 +265,7 @@ func TestValidateDynamicRegistration(t *testing.T) {
 					return v
 				}
 			}
-			err := tc.v(t).ValidateDynamicRegistration(tc.in)
+			err := tc.v(t).ValidateDynamicRegistration(testCtx, tc.in)
 			if tc.expectErr {
 				require.Error(t, err)
 			} else {

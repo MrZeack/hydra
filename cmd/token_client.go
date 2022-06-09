@@ -64,11 +64,15 @@ This command should not be used for anything else than manual testing or demo pu
 and success.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			/* #nosec G402 - we want to support dev environments, hence tls trickery */
-			ctx := context.WithValue(context.Background(), oauth2.HTTPClient, &http.Client{
+			ctx := cmd.Context()
+			ctx = context.WithValue(ctx, oauth2.HTTPClient, &http.Client{
 				Transport: &transporter{
 					FakeTLSTermination: flagx.MustGetBool(cmd, "fake-tls-termination"),
 					Transport: &http.Transport{
-						TLSClientConfig: &tls.Config{InsecureSkipVerify: flagx.MustGetBool(cmd, "skip-tls-verify")},
+						TLSClientConfig: &tls.Config{
+							// nolint:gosec
+							InsecureSkipVerify: flagx.MustGetBool(cmd, "skip-tls-verify"),
+						},
 					},
 				},
 			})

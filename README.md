@@ -37,7 +37,7 @@ Ory Cloud has easy examples, administrative user interfaces, hosted pages (e.g. 
 
 ### :mega: Community gets Ory Cloud for Free! :mega:
 
-Ory community members get the Ory Cloud Start Up plan **free for six months**, with all quality-of-life features available, such as custom domains and giving your team members access. [Sign up with your GitHub account](https://console.ory.sh/registration?preferred_plan=start-up&utm_source=github&utm_medium=banner&utm_campaign=hydra-readme-first900) and use the coupon code **`FIRST900`** on the *"Start-Up Plan"* checkout page to calim your free project now! Make sure to be signed up to the [Ory Community Slack](https://slack.ory.sh) when using the code!
+Ory community members get the Ory Cloud Start Up plan **free for six months**, with all quality-of-life features available, such as custom domains and giving your team members access. [Sign up with your GitHub account](https://console.ory.sh/registration?preferred_plan=start-up&utm_source=github&utm_medium=banner&utm_campaign=hydra-readme-first900) and use the coupon code **`FIRST900`** on the *"Start-Up Plan"* checkout page to claim your free project now! Make sure to be signed up to the [Ory Community Slack](https://slack.ory.sh) when using the code!
 
 ## Get Started
 
@@ -184,7 +184,7 @@ that your company deserves a spot here, reach out to
             <td>DataDetect</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/datadetect.svg" alt="Datadetect"></td>
             <td><a href="https://unifiedglobalarchiving.com/data-detect/">unifiedglobalarchiving.com/data-detect/</a></td>
-        </tr>        
+        </tr>
         <tr>
             <td>Adopter *</td>
             <td>Sainsbury's</td>
@@ -202,13 +202,13 @@ that your company deserves a spot here, reach out to
             <td>Reyah</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/reyah.svg" alt="Reyah"></td>
             <td><a href="https://reyah.eu/">reyah.eu</a></td>
-        </tr>        
+        </tr>
         <tr>
             <td>Adopter *</td>
             <td>Zero</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/commitzero.svg" alt="Project Zero by Commit"></td>
             <td><a href="https://getzero.dev/">getzero.dev</a></td>
-        </tr>        
+        </tr>
         <tr>
             <td>Adopter *</td>
             <td>Padis</td>
@@ -226,7 +226,7 @@ that your company deserves a spot here, reach out to
             <td>Security Onion Solutions</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/securityonion.svg" alt="Security Onion Solutions"></td>
             <td><a href="https://securityonionsolutions.com/">securityonionsolutions.com</a></td>
-        </tr>        
+        </tr>
         <tr>
             <td>Adopter *</td>
             <td>Factly</td>
@@ -250,7 +250,7 @@ that your company deserves a spot here, reach out to
             <td>Spiri.bo</td>
             <td align="center"><img height="32px" src="https://raw.githubusercontent.com/ory/meta/master/static/adopters/spiribo.svg" alt="Spiri.bo"></td>
             <td><a href="https://spiri.bo/">spiri.bo</a></td>
-        </tr>        
+        </tr>
         <tr>
             <td>Sponsor</td>
             <td>Strivacity</td>
@@ -328,7 +328,7 @@ and the OpenID Foundation:
 Ory Hydra is an OpenID Foundation [certified OpenID Provider (OP)](http://openid.net/certification/#OPs).
 
 <p align="center">
-    <img src="docs/static/img/docs/oidc-cert.png" alt="Ory Hydra is a certified OpenID Providier" width="256px">
+    <img src=".github/assets/oidc-cert.png" alt="Ory Hydra is a certified OpenID Providier" width="256px">
 </p>
 
 The following OpenID profiles are certified:
@@ -355,7 +355,7 @@ The **[tutorial](https://www.ory.sh/docs/hydra/5min-tutorial)** teaches you to s
 a Postgres instance and an exemplary identity provider written in React using docker-compose.
 It will take you about 5 minutes to complete the **[tutorial](https://www.ory.sh/docs/hydra/5min-tutorial)**.
 
-<img src="docs/static/img/docs/oauth2-flow.gif" alt="OAuth2 Flow">
+<img src=".github/assets/oauth2-flow.gif" alt="OAuth2 Flow">
 
 <br clear="all">
 
@@ -650,6 +650,14 @@ If you wish to check your code changes against any of the docker-compose quickst
 make docker
 docker compose -f quickstart.yml up # ....
 ```
+
+#### Add a new migration
+
+1. `mkdir persistence/sql/src/YYYYMMDD000001_migration_name/`
+2. Put the migration files into this directory, following the standard naming conventions. If you wish to execute different parts of a migration in separate transactions, add split marks (lines with the text `--split`) where desired. Why this might be necessary is explained in https://github.com/gobuffalo/fizz/issues/104.
+3. Run `make persistence/sql/migrations/<migration_id>` to generate migration fragments.
+4. If an update causes the migration to have fewer fragments than the number already generated, run `make persistence/sql/migrations/<migration_id>-clean`. This is equivalent to a `rm` command with the right parameters, but comes with better tab completion.
+5. Before committing generated migration fragments, run the above clean command and generate a fresh copy of migration fragments to make sure the `sql/src` and `sql/migrations` directories are consistent.
 
 ## Libraries and third-party projects
 

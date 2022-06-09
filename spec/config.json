@@ -221,6 +221,11 @@
       "type": "object",
       "description": "Configures HTTPS (HTTP over TLS). If configured, the server automatically supports HTTP/2.",
       "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Setting enabled to false drops the TLS requirement for the admin endpoint, even if TLS is enabled on the public endpoint.",
+          "default": true
+        },
         "key": {
           "description": "Configures the private key (pem encoded).",
           "allOf": [
@@ -413,16 +418,6 @@
               "allOf": [
                 {
                   "$ref": "#/definitions/tls_config"
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "enabled": {
-                      "type": "boolean",
-                      "description": "Setting enabled to false drops the TLS requirement for the admin endpoint, even if TLS is enabled on the public endpoint.",
-                      "default": true
-                    }
-                  }
                 }
               ]
             }
@@ -461,6 +456,26 @@
       "type": "string",
       "description": "Sets the data source name. This configures the backend where Ory Hydra persists data. If dsn is \"memory\", data will be written to memory and is lost when you restart this instance. Ory Hydra supports popular SQL databases. For more detailed configuration information go to: https://www.ory.sh/docs/hydra/dependencies-environment#sql"
     },
+    "clients": {
+      "title": "Global outgoing network settings",
+      "description": "Configure how outgoing network calls behave.",
+      "type": "object",
+      "properties": {
+        "http": {
+          "title": "Global HTTP client configuration",
+          "description": "Configure how outgoing HTTP calls behave.",
+          "type": "object",
+          "properties": {
+            "disallow_private_ip_ranges": {
+              "title": "Disallow private IP ranges",
+              "description": "Disallow all outgoing HTTP calls to private IP ranges. This feature can help protect against SSRF attacks.",
+              "type": "boolean",
+              "default": false
+            }
+          }
+        }
+      }
+    },
     "hsm": {
       "type": "object",
       "additionalProperties": false,
@@ -484,6 +499,11 @@
         "token_label": {
           "type": "string",
           "description": "Label of the token to use (if slot is not specified). If both slot and label are set, token label takes preference over slot. In this case first slot, that contains this label is used."
+        },
+        "key_set_prefix": {
+          "type": "string",
+          "description": "Key set prefix can be used in case of multiple Ory Hydra instances need to store keys on the same HSM partition. For example if `hsm.key_set_prefix=app1.` then key set `hydra.openid.id-token` would be generated/requested/deleted on HSM with `CKA_LABEL=app1.hydra.openid.id-token`.",
+          "default": ""
         }
       }
     },
@@ -851,14 +871,6 @@
             }
           }
         },
-        "include_legacy_error_fields": {
-          "type": "boolean",
-          "description": "Set this to true if you want to include the `error_hint` and `error_debug` legacy fields in error responses. We recommend to set this to `false` unless you have clients using these fields.",
-          "default": false,
-          "examples": [
-            true
-          ]
-        },
         "exclude_not_before_claim": {
           "type": "boolean",
           "description": "Set to true if you want to exclude claim `nbf (not before)` part of access token.",
@@ -1219,11 +1231,9 @@
     },
     "dangerous-allow-insecure-redirect-urls": {
       "type": "array",
-      "items": [
-        {
-          "type": "string"
-        }
-      ],
+      "items": {
+        "type": "string"
+      },
       "title": "Disable HTTPS enforcement for the provided redirect URLs.",
       "description": "DO NOT USE THIS IN PRODUCTION - Disable HTTPS enforcement for the provided redirect URLs. This is only available as CLI flag `--dangerous-allow-insecure-redirect-urls`."
     }

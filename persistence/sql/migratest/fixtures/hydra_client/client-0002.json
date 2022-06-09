@@ -1,0 +1,51 @@
+{
+  "AllowedCORSOrigins": [],
+  "Audience": [],
+  "BackChannelLogoutSessionRequired": false,
+  "BackChannelLogoutURI": "",
+  "ClientURI": "http://client/0002",
+  "Contacts": [
+    "contact-0002_1"
+  ],
+  "CreatedAt": "0001-01-01T00:00:00Z",
+  "FrontChannelLogoutSessionRequired": false,
+  "FrontChannelLogoutURI": "",
+  "GrantTypes": [
+    "grant-0002_1"
+  ],
+  "ID": "00000000-0000-0000-0000-000000000000",
+  "JSONWebKeys": {
+    "JSONWebKeySet": null
+  },
+  "JSONWebKeysURI": "",
+  "LogoURI": "http://logo/0002",
+  "Metadata": {},
+  "NID": "00000000-0000-0000-0000-000000000000",
+  "Name": "Client 0002",
+  "OutfacingID": "client-0002",
+  "Owner": "owner-0002",
+  "PKDeprecated": 2,
+  "PolicyURI": "http://policy/0002",
+  "PostLogoutRedirectURIs": [],
+  "RedirectURIs": [
+    "http://redirect/0002_1"
+  ],
+  "RegistrationAccessToken": "",
+  "RegistrationAccessTokenSignature": "",
+  "RegistrationClientURI": "",
+  "RequestObjectSigningAlgorithm": "",
+  "RequestURIs": [],
+  "ResponseTypes": [
+    "response-0002_1"
+  ],
+  "Scope": "scope-0002",
+  "Secret": "secret-0002",
+  "SecretExpiresAt": 0,
+  "SectorIdentifierURI": "",
+  "SubjectType": "",
+  "TermsOfServiceURI": "http://tos/0002",
+  "TokenEndpointAuthMethod": "none",
+  "TokenEndpointAuthSigningAlgorithm": "",
+  "UpdatedAt": "0001-01-01T00:00:00Z",
+  "UserinfoSignedResponseAlg": ""
+}

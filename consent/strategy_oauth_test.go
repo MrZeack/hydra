@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/hydra/internal/testhelpers"
+	"github.com/ory/x/contextx"
 
 	"github.com/ory/fosite"
 	"github.com/ory/x/urlx"
@@ -35,15 +36,16 @@ import (
 )
 
 func TestStrategyLoginConsentNext(t *testing.T) {
-	reg := internal.NewMockedRegistry(t)
-	reg.Config().MustSet(config.KeyAccessTokenStrategy, "opaque")
-	reg.Config().MustSet(config.KeyConsentRequestMaxAge, time.Hour)
-	reg.Config().MustSet(config.KeyConsentRequestMaxAge, time.Hour)
-	reg.Config().MustSet(config.KeyScopeStrategy, "exact")
-	reg.Config().MustSet(config.KeySubjectTypesSupported, []string{"pairwise", "public"})
-	reg.Config().MustSet(config.KeySubjectIdentifierAlgorithmSalt, "76d5d2bf-747f-4592-9fbd-d2b895a54b3a")
+	ctx := context.Background()
+	reg := internal.NewMockedRegistry(t, &contextx.Default{})
+	reg.Config().MustSet(ctx, config.KeyAccessTokenStrategy, "opaque")
+	reg.Config().MustSet(ctx, config.KeyConsentRequestMaxAge, time.Hour)
+	reg.Config().MustSet(ctx, config.KeyConsentRequestMaxAge, time.Hour)
+	reg.Config().MustSet(ctx, config.KeyScopeStrategy, "exact")
+	reg.Config().MustSet(ctx, config.KeySubjectTypesSupported, []string{"pairwise", "public"})
+	reg.Config().MustSet(ctx, config.KeySubjectIdentifierAlgorithmSalt, "76d5d2bf-747f-4592-9fbd-d2b895a54b3a")
 
-	publicTS, adminTS := testhelpers.NewOAuth2Server(t, reg)
+	publicTS, adminTS := testhelpers.NewOAuth2Server(ctx, t, reg)
 	adminClient := hydra.NewHTTPClientWithConfig(nil, &hydra.TransportConfig{Schemes: []string{"http"}, Host: urlx.ParseOrPanic(adminTS.URL).Host})
 
 	oauth2Config := func(t *testing.T, c *client.Client) *oauth2.Config {
@@ -335,7 +337,7 @@ func TestStrategyLoginConsentNext(t *testing.T) {
 		t.Run("followup=should pass when prompt=none, redirection scheme is HTTP and host is a custom scheme", func(t *testing.T) {
 			for _, redir := range c.RedirectURIs[1:] {
 				t.Run("redir=should pass because prompt=none, client is public, and redirection is "+redir, func(t *testing.T) {
-					_, err := hc.Get(urlx.CopyWithQuery(reg.Config().OAuth2AuthURL(), url.Values{
+					_, err := hc.Get(urlx.CopyWithQuery(reg.Config().OAuth2AuthURL(ctx), url.Values{
 						"response_type": {"code"},
 						"state":         {uuid.New()},
 						"redirect_uri":  {redir},
@@ -565,7 +567,7 @@ func TestStrategyLoginConsentNext(t *testing.T) {
 
 		subject := "auth-user"
 		hash := fmt.Sprintf("%x",
-			sha256.Sum256([]byte(c.SectorIdentifierURI+subject+reg.Config().SubjectIdentifierAlgorithmSalt())))
+			sha256.Sum256([]byte(c.SectorIdentifierURI+subject+reg.Config().SubjectIdentifierAlgorithmSalt(ctx))))
 
 		testhelpers.NewLoginConsentUI(t, reg.Config(),
 			acceptLoginHandler(t, subject, &models.AcceptLoginRequest{Remember: true}),
@@ -670,5 +672,89 @@ func TestStrategyLoginConsentNext(t *testing.T) {
 
 		hc := &http.Client{Jar: newAuthCookieJar(t, reg, publicTS.URL, "i-do-not-exist")}
 		makeRequestAndExpectError(t, hc, c, url.Values{"prompt": {"none"}}, "The Authorization Server requires End-User authentication.")
+	})
+
+	t.Run("case=should be able to retry accept consent request", func(t *testing.T) {
+
+		subject := "aeneas-rekkas"
+		c := createDefaultClient(t)
+		testhelpers.NewLoginConsentUI(t, reg.Config(),
+			acceptLoginHandler(t, subject, &models.AcceptLoginRequest{
+				Subject: &subject,
+				Context: map[string]interface{}{"fooz": "barz"},
+			}),
+			checkAndDuplicateAcceptConsentHandler(t, adminClient.Admin, func(t *testing.T, res *admin.GetConsentRequestOK, err error) *models.AcceptConsentRequest {
+				require.NoError(t, err)
+				assert.Equal(t, map[string]interface{}{"fooz": "barz"}, res.Payload.Context)
+				assert.Equal(t, subject, res.Payload.Subject)
+				return &models.AcceptConsentRequest{
+					Remember:   true,
+					GrantScope: []string{"openid"},
+					Session: &models.ConsentRequestSession{
+						AccessToken: map[string]interface{}{"foo": "bar"},
+						IDToken:     map[string]interface{}{"bar": "baz"},
+					},
+				}
+			}))
+
+		hc := testhelpers.NewEmptyJarClient(t)
+		makeRequestAndExpectCode(t, hc, c, url.Values{"redirect_uri": {c.RedirectURIs[0]}})
+
+	})
+
+	t.Run("case=should be able to retry accept login request", func(t *testing.T) {
+		subject := "aeneas-rekkas"
+		c := createDefaultClient(t)
+		testhelpers.NewLoginConsentUI(t, reg.Config(),
+			checkAndDuplicateAcceptLoginHandler(t, adminClient.Admin, subject, func(*testing.T, *admin.GetLoginRequestOK, error) *models.AcceptLoginRequest {
+				return &models.AcceptLoginRequest{
+					Subject: &subject,
+					Context: map[string]interface{}{"fooz": "barz"},
+				}
+			}),
+			checkAndAcceptConsentHandler(t, adminClient.Admin, func(t *testing.T, res *admin.GetConsentRequestOK, err error) *models.AcceptConsentRequest {
+				require.NoError(t, err)
+				assert.Equal(t, map[string]interface{}{"fooz": "barz"}, res.Payload.Context)
+				assert.Equal(t, subject, res.Payload.Subject)
+				return &models.AcceptConsentRequest{
+					Remember:   true,
+					GrantScope: []string{"openid"},
+					Session: &models.ConsentRequestSession{
+						AccessToken: map[string]interface{}{"foo": "bar"},
+						IDToken:     map[string]interface{}{"bar": "baz"},
+					},
+				}
+			}))
+
+		hc := testhelpers.NewEmptyJarClient(t)
+		makeRequestAndExpectCode(t, hc, c, url.Values{"redirect_uri": {c.RedirectURIs[0]}})
+	})
+
+	t.Run("case=should be able to retry both accept login and consent requests", func(t *testing.T) {
+		subject := "aeneas-rekkas"
+		c := createDefaultClient(t)
+		testhelpers.NewLoginConsentUI(t, reg.Config(),
+			checkAndDuplicateAcceptLoginHandler(t, adminClient.Admin, subject, func(*testing.T, *admin.GetLoginRequestOK, error) *models.AcceptLoginRequest {
+				return &models.AcceptLoginRequest{
+					Subject: &subject,
+					Context: map[string]interface{}{"fooz": "barz"},
+				}
+			}),
+			checkAndDuplicateAcceptConsentHandler(t, adminClient.Admin, func(t *testing.T, res *admin.GetConsentRequestOK, err error) *models.AcceptConsentRequest {
+				require.NoError(t, err)
+				assert.Equal(t, map[string]interface{}{"fooz": "barz"}, res.Payload.Context)
+				assert.Equal(t, subject, res.Payload.Subject)
+				return &models.AcceptConsentRequest{
+					Remember:   true,
+					GrantScope: []string{"openid"},
+					Session: &models.ConsentRequestSession{
+						AccessToken: map[string]interface{}{"foo": "bar"},
+						IDToken:     map[string]interface{}{"bar": "baz"},
+					},
+				}
+			}))
+
+		hc := testhelpers.NewEmptyJarClient(t)
+		makeRequestAndExpectCode(t, hc, c, url.Values{"redirect_uri": {c.RedirectURIs[0]}})
 	})
 }

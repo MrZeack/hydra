@@ -3,11 +3,15 @@ package driver
 import (
 	"context"
 
+	"github.com/ory/hydra/x/servicelocatorx"
+	"github.com/ory/x/servicelocator"
+
 	"github.com/ory/x/configx"
 
 	"github.com/ory/x/logrusx"
 
 	"github.com/ory/hydra/driver/config"
+	"github.com/ory/x/contextx"
 )
 
 type options struct {
@@ -15,6 +19,8 @@ type options struct {
 	preload      bool
 	validate     bool
 	opts         []configx.OptionModifier
+	// The first default refers to determining the NID at startup; the second default referes to the fact that the Contextualizer may dynamically change the NID.
+	skipNetworkInit bool
 }
 
 func newOptions() *options {
@@ -42,12 +48,16 @@ func DisableValidation() OptionsModifier {
 	}
 }
 
-// DisableValidation validating the config.
-//
-// This does not affect schema validation!
+// DisablePreloading will not preload the config.
 func DisablePreloading() OptionsModifier {
 	return func(o *options) {
 		o.preload = false
+	}
+}
+
+func SkipNetworkInit() OptionsModifier {
+	return func(o *options) {
+		o.skipNetworkInit = true
 	}
 }
 
@@ -57,22 +67,28 @@ func New(ctx context.Context, opts ...OptionsModifier) Registry {
 		f(o)
 	}
 
-	l := logrusx.New("Ory Hydra", config.Version)
-	c, err := config.New(ctx, l, o.opts...)
-	if err != nil {
-		l.WithError(err).Fatal("Unable to instantiate configuration.")
+	l := servicelocator.Logger(ctx, logrusx.New("Ory Hydra", config.Version))
+	ctxter := servicelocator.Contextualizer(ctx, &contextx.Default{})
+
+	c := servicelocatorx.ConfigFromContext(ctx, nil)
+	if c == nil {
+		var err error
+		c, err = config.New(ctx, l, o.opts...)
+		if err != nil {
+			l.WithError(err).Fatal("Unable to instantiate configuration.")
+		}
 	}
 
 	if o.validate {
-		config.MustValidate(l, c)
+		config.MustValidate(ctx, l, c)
 	}
 
-	r, err := NewRegistryFromDSN(ctx, c, l)
+	r, err := NewRegistryFromDSN(ctx, c, l, o.skipNetworkInit, false, ctxter)
 	if err != nil {
 		l.WithError(err).Fatal("Unable to create service registry.")
 	}
 
-	if err = r.Init(ctx); err != nil {
+	if err = r.Init(ctx, o.skipNetworkInit, false, &contextx.Default{}); err != nil {
 		l.WithError(err).Fatal("Unable to initialize service registry.")
 	}
 
@@ -81,7 +97,7 @@ func New(ctx context.Context, opts ...OptionsModifier) Registry {
 		CallRegistry(ctx, r)
 	}
 
-	c.Source().SetTracer(context.Background(), r.Tracer(ctx))
+	c.Source(ctx).SetTracer(ctx, r.Tracer(ctx))
 
 	return r
 }

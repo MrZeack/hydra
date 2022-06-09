@@ -78,7 +78,6 @@ func TestExecute(t *testing.T) {
 	conf := internal.NewConfigurationWithDefaults()
 
 	rootCmd := NewRootCmd()
-
 	for _, c := range []struct {
 		args      []string
 		wait      func() bool
@@ -121,14 +120,13 @@ func TestExecute(t *testing.T) {
 		{args: []string{"clients", "create", "--skip-tls-verify", "--endpoint", backend, "--id", "confidential-foo", "--pgp-key", base64EncodedPGPPublicKey(t), "--grant-types", "client_credentials", "--response-types", "token"}},
 		{args: []string{"clients", "delete", "--skip-tls-verify", "--endpoint", backend, "public-foo"}},
 		{args: []string{"keys", "create", "--skip-tls-verify", "foo", "--endpoint", backend, "-a", "RS256"}},
-		{args: []string{"keys", "create", "--skip-tls-verify", "foo", "--endpoint", backend, "-a", "HS256"}, skipTest: conf.HsmEnabled()},
 		{args: []string{"keys", "get", "--skip-tls-verify", "--endpoint", backend, "foo"}},
 		// {args: []string{"keys", "rotate", "--skip-tls-verify", "--endpoint", backend, "foo"}},
 		{args: []string{"keys", "get", "--skip-tls-verify", "--endpoint", backend, "foo"}},
 		{args: []string{"keys", "delete", "--skip-tls-verify", "--endpoint", backend, "foo"}},
-		{args: []string{"keys", "import", "--skip-tls-verify", "--endpoint", backend, "import-1", "../test/stub/ecdh.key", "../test/stub/ecdh.pub"}, skipTest: conf.HsmEnabled()},
-		{args: []string{"keys", "import", "--skip-tls-verify", "--endpoint", backend, "import-2", "../test/stub/rsa.key", "../test/stub/rsa.pub"}, skipTest: conf.HsmEnabled()},
-		{args: []string{"keys", "import", "--skip-tls-verify", "--endpoint", backend, "import-2", "../test/stub/rsa.key", "../test/stub/rsa.pub"}, skipTest: conf.HsmEnabled()},
+		{args: []string{"keys", "import", "--skip-tls-verify", "--endpoint", backend, "import-1", "../test/stub/ecdh.key", "../test/stub/ecdh.pub"}, skipTest: conf.HSMEnabled()},
+		{args: []string{"keys", "import", "--skip-tls-verify", "--endpoint", backend, "import-2", "../test/stub/rsa.key", "../test/stub/rsa.pub"}, skipTest: conf.HSMEnabled()},
+		{args: []string{"keys", "import", "--skip-tls-verify", "--endpoint", backend, "import-2", "../test/stub/rsa.key", "../test/stub/rsa.pub"}, skipTest: conf.HSMEnabled()},
 		{args: []string{"token", "revoke", "--skip-tls-verify", "--endpoint", frontend, "--client-secret", "foobar", "--client-id", "foobarbaz", "foo"}},
 		{args: []string{"token", "client", "--skip-tls-verify", "--endpoint", frontend, "--client-secret", "foobar", "--client-id", "foobarbaz"}},
 		{args: []string{"help", "migrate", "sql"}},

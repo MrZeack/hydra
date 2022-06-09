@@ -36,11 +36,11 @@ type ClientService interface {
 
 	DynamicClientRegistrationCreateOAuth2Client(params *DynamicClientRegistrationCreateOAuth2ClientParams, opts ...ClientOption) (*DynamicClientRegistrationCreateOAuth2ClientCreated, error)
 
-	DynamicClientRegistrationDeleteOAuth2Client(params *DynamicClientRegistrationDeleteOAuth2ClientParams, opts ...ClientOption) (*DynamicClientRegistrationDeleteOAuth2ClientNoContent, error)
+	DynamicClientRegistrationDeleteOAuth2Client(params *DynamicClientRegistrationDeleteOAuth2ClientParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DynamicClientRegistrationDeleteOAuth2ClientNoContent, error)
 
-	DynamicClientRegistrationGetOAuth2Client(params *DynamicClientRegistrationGetOAuth2ClientParams, opts ...ClientOption) (*DynamicClientRegistrationGetOAuth2ClientOK, error)
+	DynamicClientRegistrationGetOAuth2Client(params *DynamicClientRegistrationGetOAuth2ClientParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DynamicClientRegistrationGetOAuth2ClientOK, error)
 
-	DynamicClientRegistrationUpdateOAuth2Client(params *DynamicClientRegistrationUpdateOAuth2ClientParams, opts ...ClientOption) (*DynamicClientRegistrationUpdateOAuth2ClientOK, error)
+	DynamicClientRegistrationUpdateOAuth2Client(params *DynamicClientRegistrationUpdateOAuth2ClientParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DynamicClientRegistrationUpdateOAuth2ClientOK, error)
 
 	IsInstanceReady(params *IsInstanceReadyParams, opts ...ClientOption) (*IsInstanceReadyOK, error)
 
@@ -64,6 +64,8 @@ type ClientService interface {
 
 https://openid.net/specs/openid-connect-frontchannel-1_0.html
 https://openid.net/specs/openid-connect-backchannel-1_0.html
+
+Back-channel logout is performed asynchronously and does not affect logout flow.
 */
 func (a *Client) DisconnectUser(params *DisconnectUserParams, opts ...ClientOption) error {
 	// TODO: Validate the params before sending
@@ -161,7 +163,7 @@ func (a *Client) DynamicClientRegistrationCreateOAuth2Client(params *DynamicClie
 	op := &runtime.ClientOperation{
 		ID:                 "dynamicClientRegistrationCreateOAuth2Client",
 		Method:             "POST",
-		PathPattern:        "/connect/register",
+		PathPattern:        "/oauth2/register",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
@@ -202,7 +204,7 @@ If it uses `client_secret_basic`, present the Client ID and the Client Secret in
 OAuth 2.0 clients are used to perform OAuth 2.0 and OpenID Connect flows. Usually, OAuth 2.0 clients are
 generated for applications which want to consume your OAuth 2.0 or OpenID Connect capabilities.
 */
-func (a *Client) DynamicClientRegistrationDeleteOAuth2Client(params *DynamicClientRegistrationDeleteOAuth2ClientParams, opts ...ClientOption) (*DynamicClientRegistrationDeleteOAuth2ClientNoContent, error) {
+func (a *Client) DynamicClientRegistrationDeleteOAuth2Client(params *DynamicClientRegistrationDeleteOAuth2ClientParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DynamicClientRegistrationDeleteOAuth2ClientNoContent, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewDynamicClientRegistrationDeleteOAuth2ClientParams()
@@ -210,12 +212,13 @@ func (a *Client) DynamicClientRegistrationDeleteOAuth2Client(params *DynamicClie
 	op := &runtime.ClientOperation{
 		ID:                 "dynamicClientRegistrationDeleteOAuth2Client",
 		Method:             "DELETE",
-		PathPattern:        "/connect/register/{id}",
+		PathPattern:        "/oauth2/register/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/x-www-form-urlencoded"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &DynamicClientRegistrationDeleteOAuth2ClientReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -251,7 +254,7 @@ If it uses `client_secret_basic`, present the Client ID and the Client Secret in
 OAuth 2.0 clients are used to perform OAuth 2.0 and OpenID Connect flows. Usually, OAuth 2.0 clients are
 generated for applications which want to consume your OAuth 2.0 or OpenID Connect capabilities.
 */
-func (a *Client) DynamicClientRegistrationGetOAuth2Client(params *DynamicClientRegistrationGetOAuth2ClientParams, opts ...ClientOption) (*DynamicClientRegistrationGetOAuth2ClientOK, error) {
+func (a *Client) DynamicClientRegistrationGetOAuth2Client(params *DynamicClientRegistrationGetOAuth2ClientParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DynamicClientRegistrationGetOAuth2ClientOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewDynamicClientRegistrationGetOAuth2ClientParams()
@@ -259,12 +262,13 @@ func (a *Client) DynamicClientRegistrationGetOAuth2Client(params *DynamicClientR
 	op := &runtime.ClientOperation{
 		ID:                 "dynamicClientRegistrationGetOAuth2Client",
 		Method:             "GET",
-		PathPattern:        "/connect/register/{id}",
+		PathPattern:        "/oauth2/register/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &DynamicClientRegistrationGetOAuth2ClientReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -303,7 +307,7 @@ If it uses `client_secret_basic`, present the Client ID and the Client Secret in
 OAuth 2.0 clients are used to perform OAuth 2.0 and OpenID Connect flows. Usually, OAuth 2.0 clients are
 generated for applications which want to consume your OAuth 2.0 or OpenID Connect capabilities.
 */
-func (a *Client) DynamicClientRegistrationUpdateOAuth2Client(params *DynamicClientRegistrationUpdateOAuth2ClientParams, opts ...ClientOption) (*DynamicClientRegistrationUpdateOAuth2ClientOK, error) {
+func (a *Client) DynamicClientRegistrationUpdateOAuth2Client(params *DynamicClientRegistrationUpdateOAuth2ClientParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*DynamicClientRegistrationUpdateOAuth2ClientOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewDynamicClientRegistrationUpdateOAuth2ClientParams()
@@ -311,12 +315,13 @@ func (a *Client) DynamicClientRegistrationUpdateOAuth2Client(params *DynamicClie
 	op := &runtime.ClientOperation{
 		ID:                 "dynamicClientRegistrationUpdateOAuth2Client",
 		Method:             "PUT",
-		PathPattern:        "/connect/register/{id}",
+		PathPattern:        "/oauth2/register/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &DynamicClientRegistrationUpdateOAuth2ClientReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}

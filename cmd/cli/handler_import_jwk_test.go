@@ -16,14 +16,15 @@ import (
 
 	"github.com/ory/hydra/internal"
 	"github.com/ory/hydra/x"
+	"github.com/ory/x/contextx"
 )
 
 func TestImportJSONWebKey(t *testing.T) {
 	conf := internal.NewConfigurationWithDefaults()
-	reg := internal.NewRegistryMemory(t, conf)
+	reg := internal.NewRegistryMemory(t, conf, &contextx.Default{})
 	router := x.NewRouterPublic()
 
-	if conf.HsmEnabled() {
+	if conf.HSMEnabled() {
 		t.Skip("Skipping test. Keys cannot be imported when Hardware Security Module is enabled")
 	}
 

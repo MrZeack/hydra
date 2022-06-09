@@ -22,10 +22,12 @@ package jwk
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
-	"github.com/ory/hydra/driver/config"
+	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
+
+	"github.com/ory/x/urlx"
 
 	"github.com/ory/x/errorsx"
 
@@ -44,11 +46,10 @@ const (
 
 type Handler struct {
 	r InternalRegistry
-	c *config.Provider
 }
 
-func NewHandler(r InternalRegistry, c *config.Provider) *Handler {
-	return &Handler{r: r, c: c}
+func NewHandler(r InternalRegistry) *Handler {
+	return &Handler{r: r}
 }
 
 func (h *Handler) SetRoutes(admin *x.RouterAdmin, public *x.RouterPublic, corsMiddleware func(http.Handler) http.Handler) {
@@ -89,12 +90,21 @@ func (h *Handler) SetRoutes(admin *x.RouterAdmin, public *x.RouterPublic, corsMi
 func (h *Handler) WellKnown(w http.ResponseWriter, r *http.Request) {
 	var jwks jose.JSONWebKeySet
 
-	for _, set := range stringslice.Unique(h.c.WellKnownKeys()) {
-		keys, err := h.r.KeyManager().GetKeySet(r.Context(), set)
-		if err != nil {
+	ctx := r.Context()
+	for _, set := range stringslice.Unique(h.r.Config().WellKnownKeys(ctx)) {
+		keys, err := h.r.KeyManager().GetKeySet(ctx, set)
+		if errors.Is(err, x.ErrNotFound) {
+			h.r.Logger().Warnf("JSON Web Key Set \"%s\" does not exist yet, generating new key pair...", set)
+			keys, err = h.r.KeyManager().GenerateAndPersistKeySet(ctx, set, uuid.Must(uuid.NewV4()).String(), string(jose.ES256), "sig")
+			if err != nil {
+				h.r.Writer().WriteError(w, r, err)
+				return
+			}
+		} else if err != nil {
 			h.r.Writer().WriteError(w, r, err)
 			return
 		}
+
 		keys = ExcludePrivateKeys(keys)
 		jwks.Keys = append(jwks.Keys, keys.Keys...)
 	}
@@ -199,7 +209,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request, ps httprouter.P
 
 	if keys, err := h.r.KeyManager().GenerateAndPersistKeySet(r.Context(), set, keyRequest.KeyID, keyRequest.Algorithm, keyRequest.Use); err == nil {
 		keys = ExcludeOpaquePrivateKeys(keys)
-		h.r.Writer().WriteCreated(w, r, fmt.Sprintf("%s://%s/keys/%s", r.URL.Scheme, r.URL.Host, set), keys)
+		h.r.Writer().WriteCreated(w, r, urlx.AppendPaths(h.r.Config().IssuerURL(r.Context()), "/keys/"+set).String(), keys)
 	} else {
 		h.r.Writer().WriteError(w, r, err)
 	}

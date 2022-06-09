@@ -1,0 +1,53 @@
+{
+  "AllowedCORSOrigins": [],
+  "Audience": [],
+  "BackChannelLogoutSessionRequired": false,
+  "BackChannelLogoutURI": "",
+  "ClientURI": "http://client/0004",
+  "Contacts": [
+    "contact-0004_1"
+  ],
+  "CreatedAt": "0001-01-01T00:00:00Z",
+  "FrontChannelLogoutSessionRequired": false,
+  "FrontChannelLogoutURI": "",
+  "GrantTypes": [
+    "grant-0004_1"
+  ],
+  "ID": "00000000-0000-0000-0000-000000000000",
+  "JSONWebKeys": {
+    "JSONWebKeySet": null
+  },
+  "JSONWebKeysURI": "http://jwks/0004",
+  "LogoURI": "http://logo/0004",
+  "Metadata": {},
+  "NID": "00000000-0000-0000-0000-000000000000",
+  "Name": "Client 0004",
+  "OutfacingID": "client-0004",
+  "Owner": "owner-0004",
+  "PKDeprecated": 4,
+  "PolicyURI": "http://policy/0004",
+  "PostLogoutRedirectURIs": [],
+  "RedirectURIs": [
+    "http://redirect/0004_1"
+  ],
+  "RegistrationAccessToken": "",
+  "RegistrationAccessTokenSignature": "",
+  "RegistrationClientURI": "",
+  "RequestObjectSigningAlgorithm": "r_alg-0004",
+  "RequestURIs": [
+    "http://request/0004_1"
+  ],
+  "ResponseTypes": [
+    "response-0004_1"
+  ],
+  "Scope": "scope-0004",
+  "Secret": "secret-0004",
+  "SecretExpiresAt": 0,
+  "SectorIdentifierURI": "http://sector_id/0004",
+  "SubjectType": "",
+  "TermsOfServiceURI": "http://tos/0004",
+  "TokenEndpointAuthMethod": "none",
+  "TokenEndpointAuthSigningAlgorithm": "",
+  "UpdatedAt": "0001-01-01T00:00:00Z",
+  "UserinfoSignedResponseAlg": "u_alg-0004"
+}

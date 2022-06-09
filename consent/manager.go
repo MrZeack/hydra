@@ -24,23 +24,26 @@ import (
 	"context"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/hydra/client"
 )
 
 type ForcedObfuscatedLoginSession struct {
-	ClientID          string `db:"client_id"`
-	Subject           string `db:"subject"`
-	SubjectObfuscated string `db:"subject_obfuscated"`
+	ClientID          string    `db:"client_id"`
+	Subject           string    `db:"subject"`
+	SubjectObfuscated string    `db:"subject_obfuscated"`
+	NID               uuid.UUID `db:"nid"`
 }
 
-func (_ *ForcedObfuscatedLoginSession) TableName() string {
+func (_ ForcedObfuscatedLoginSession) TableName() string {
 	return "hydra_oauth2_obfuscated_authentication_session"
 }
 
 type Manager interface {
 	CreateConsentRequest(ctx context.Context, req *ConsentRequest) error
 	GetConsentRequest(ctx context.Context, challenge string) (*ConsentRequest, error)
-	HandleConsentRequest(ctx context.Context, challenge string, r *HandledConsentRequest) (*ConsentRequest, error)
+	HandleConsentRequest(ctx context.Context, r *HandledConsentRequest) (*ConsentRequest, error)
 	RevokeSubjectConsentSession(ctx context.Context, user string) error
 	RevokeSubjectClientConsentSession(ctx context.Context, user, client string) error
 

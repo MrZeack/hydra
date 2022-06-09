@@ -18,8 +18,11 @@ import (
 	"github.com/ory/fosite"
 	hc "github.com/ory/hydra/client"
 	"github.com/ory/hydra/driver"
+	"github.com/ory/hydra/internal"
 	"github.com/ory/hydra/oauth2"
+	"github.com/ory/x/contextx"
 	"github.com/ory/x/dbal"
+	"github.com/ory/x/networkx"
 )
 
 // TestCreateRefreshTokenSessionStress is a sanity test to verify the fix for https://github.com/ory/hydra/issues/1719 &
@@ -80,6 +83,10 @@ func TestCreateRefreshTokenSessionStress(t *testing.T) {
 			// should be fine though as nobody should use sqlite in production
 			continue
 		}
+		net := &networkx.Network{}
+		require.NoError(t, dbRegistry.Persister().Connection(context.Background()).First(net))
+		dbRegistry.WithContextualizer(&contextx.Static{NID: net.ID, C: internal.NewConfigurationWithDefaults().Source(context.Background())})
+
 		ctx, _ := context.WithDeadline(context.Background(), time.Now().Add(30*time.Second))
 		require.NoError(t, dbRegistry.OAuth2Storage().(clientCreator).CreateClient(ctx, &testClient))
 		require.NoError(t, dbRegistry.OAuth2Storage().CreateRefreshTokenSession(ctx, tokenSignature, request))

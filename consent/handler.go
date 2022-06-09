@@ -41,7 +41,7 @@ import (
 
 type Handler struct {
 	r InternalRegistry
-	c *config.Provider
+	c *config.DefaultProvider
 }
 
 const (
@@ -53,7 +53,7 @@ const (
 
 func NewHandler(
 	r InternalRegistry,
-	c *config.Provider,
+	c *config.DefaultProvider,
 ) *Handler {
 	return &Handler{
 		c: c,
@@ -218,7 +218,7 @@ func (h *Handler) DeleteLoginSession(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	if err := h.r.ConsentManager().RevokeSubjectLoginSession(r.Context(), subject); err != nil && !errors.Is(err, x.ErrNotFound) {
+	if err := h.r.ConsentManager().RevokeSubjectLoginSession(r.Context(), subject); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
@@ -574,7 +574,7 @@ func (h *Handler) AcceptConsentRequest(w http.ResponseWriter, r *http.Request, p
 	p.RequestedAt = cr.RequestedAt
 	p.HandledAt = sqlxx.NullTime(time.Now().UTC())
 
-	hr, err := h.r.ConsentManager().HandleConsentRequest(r.Context(), challenge, &p)
+	hr, err := h.r.ConsentManager().HandleConsentRequest(r.Context(), &p)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, errorsx.WithStack(err))
 		return
@@ -651,7 +651,7 @@ func (h *Handler) RejectConsentRequest(w http.ResponseWriter, r *http.Request, p
 		return
 	}
 
-	request, err := h.r.ConsentManager().HandleConsentRequest(r.Context(), challenge, &HandledConsentRequest{
+	request, err := h.r.ConsentManager().HandleConsentRequest(r.Context(), &HandledConsentRequest{
 		Error:       &p,
 		ID:          challenge,
 		RequestedAt: hr.RequestedAt,
@@ -704,7 +704,7 @@ func (h *Handler) AcceptLogoutRequest(w http.ResponseWriter, r *http.Request, ps
 	}
 
 	h.r.Writer().Write(w, r, &RequestHandlerResponse{
-		RedirectTo: urlx.SetQuery(urlx.AppendPaths(h.c.PublicURL(), "/oauth2/sessions/logout"), url.Values{"logout_verifier": {c.Verifier}}).String(),
+		RedirectTo: urlx.SetQuery(urlx.AppendPaths(h.c.PublicURL(r.Context()), "/oauth2/sessions/logout"), url.Values{"logout_verifier": {c.Verifier}}).String(),
 	})
 }
 
