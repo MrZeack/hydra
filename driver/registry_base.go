@@ -323,7 +323,7 @@ func (m *RegistryBase) OpenIDJWTStrategy() jwk.JWTSigner {
 		return m.oidcs
 	}
 
-	m.oidcs = jwk.NewDefaultJWTSigner(*m.Config(), m.r, x.OpenIDConnectKeyName)
+	m.oidcs = jwk.NewDefaultJWTSigner(m.Config(), m.r, x.OpenIDConnectKeyName)
 	return m.oidcs
 }
 
@@ -332,7 +332,7 @@ func (m *RegistryBase) AccessTokenJWTStrategy() jwk.JWTSigner {
 		return m.ats
 	}
 
-	m.ats = jwk.NewDefaultJWTSigner(*m.Config(), m.r, x.OAuth2JWTKeyName)
+	m.ats = jwk.NewDefaultJWTSigner(m.Config(), m.r, x.OAuth2JWTKeyName)
 	return m.ats
 }
 

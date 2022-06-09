@@ -34,7 +34,6 @@ func (p *Persister) CreateGrant(ctx context.Context, g trust.Grant, publicKey jo
 		}
 
 		data := p.sqlDataFromJWTGrant(g)
-
 		return sqlcon.HandleError(p.CreateWithNetwork(ctx, &data))
 	})
 }
